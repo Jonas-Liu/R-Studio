@@ -20,7 +20,7 @@ URL.date <- format(URL.date, '%m%d%Y')
 URL.content <- paste(URL.prefix, URL.base, URL.date, URL.suffix, sep = '')
 
 # Download file
-file.name <- "SOFR.xls"
+file.name <- "~\SOFR.xls"
 if(!file.exists(file.name) || (format(file.info(file.name)$mtime, '%m%d%Y') != URL.date)){
     download.file(url = URL.content, destfile = file.name, method = "curl")
 }
