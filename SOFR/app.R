@@ -4,10 +4,10 @@
 ######################################################
 
 # Set up packages
-packages <- c("readxl", "ggplot2", "shiny", "shinythemes", "plotly")
+packages <- c("readxl", "ggplot2", "shiny", "shinythemes", "plotly", "DT")
 for(package in packages){
-    if(!require(package, character.only = T)) install.packages(package)
-    library(package, character.only = T)
+    # if(!require(package, character.only = T)) install.packages(package)
+    library(package, character.only = T, lib.loc="D:/R/R-3.6.2/library")
 }
 
 # Get URL
@@ -32,7 +32,7 @@ df.rate <- as.numeric(df[[3]])
 df.vol <- as.numeric(gsub(",", "", df[[8]]))
 
 # Define UI
-shinyUI(fluidPage(theme = shinytheme("yeti"),
+ui <- fluidPage(theme = shinytheme("yeti"),
                   navbarPage("SOFR",
                              tabPanel("Chart",
                                       sidebarPanel(
@@ -159,7 +159,7 @@ shinyUI(fluidPage(theme = shinytheme("yeti"),
                                       
                              )# tabPanle: Data
                   ) # navbarPage
-)) # shinyUI(fluidPage)
+) # shinyUI(fluidPage)
 
 
 # Simulation function
@@ -220,7 +220,7 @@ sim.model.fnc <- function(method,data,parameters,nsim=5){
 
 
 # Define server logic
-shinyServer(function(input, output) {
+server <- function(input, output) {
     # Read data
     df <- read_xls(path = file.name, col_name = T, skip = 3)
     colnames(df) <- c("Date", "Name", "Rate(%)", "1st Percentile(%)", "25th Percentile(%)",
@@ -427,7 +427,7 @@ shinyServer(function(input, output) {
     }))
     
     
-})
+}
 
 
 
