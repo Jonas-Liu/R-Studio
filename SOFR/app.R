@@ -4,11 +4,23 @@
 ######################################################
 
 # Set up packages
-packages <- c("readxl", "ggplot2", "shiny", "shinythemes", "plotly", "DT")
-for(package in packages){
-    # if(!require(package, character.only = T)) install.packages(package)
-    library(package, character.only = T, lib.loc="D:/R/R-3.6.2/library")
-}
+# packages <- c("readxl", "ggplot2", "shiny", "shinythemes", "plotly", "DT", "rsconnect")
+# for(package in packages){
+#     remove.packages(package)
+#     install.packages(package, dependencies = TRUE)
+#     if(!require(package, character.only = T)) install.packages(package)
+#     library(package, character.only = T, lib.loc = .libPaths())
+#     # require(package, character.only = T)
+# }
+
+library(readxl)
+library(ggplot2)
+library(shiny)
+library(shinythemes)
+library(plotly)
+library(DT)
+library(rsconnect)
+library(MASS)
 
 # Get URL
 URL.base <- 'retrieve?multipleRateTypes=true&startdate=04022018&enddate='
@@ -96,17 +108,21 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                                                       choices = list("Vasicek" = "v", "CIR" = "c", "Ho-Lee" = "hl"),
                                                       selected = "Vasicek"
                                           ),
-                                          actionButton("Model.button", 
+                                          actionButton("Model_button", 
                                                        "Simulate", 
                                                        class = "btn btn-primary")
                                       ), # sidebarPanel
                                       mainPanel(
                                           HTML("<h3>Five Simulated Path</h4>"),
                                           plotlyOutput(outputId = "simulate.plot"),
-                                          HTML("<h3>Parameter Table</h4>"),
-                                          tableOutput(outputId = "parameter.table")
+                                          conditionalPanel(condition = "input.Model_button > 0",
+                                                           HTML("<h3>Parameter Table</h4>"),
+                                                           tableOutput(outputId = "parameter.table")
+                                          )
+                                          
                                       ) # mainPanel
                                       
+                                        
                              ),# tabPanle: Model
                              tabPanel("Data Table",
                                       # select Inputs
@@ -175,7 +191,8 @@ sim.model.fnc <- function(method,data,parameters,nsim=5){
         for (sim in 1:nsim){
             fit[sim,1] <- data[1]
             for (i in 2:n){
-                add <- fit[sim,i-1]*exp(-a)+b*(1-exp(-a))+sig*sqrt((1-exp(-2*a))/(2*a))*rnorm(1)
+                # add <- fit[sim,i-1]*exp(-a)+b*(1-exp(-a))+sig*sqrt((1-exp(-2*a))/(2*a))*rnorm(1)
+                add <- fit[sim,i-1] + a*(b-fit[sim,i-1]) + sig*rnorm(1)
                 fit[sim,i] <- add
             }
         }
@@ -205,6 +222,10 @@ sim.model.fnc <- function(method,data,parameters,nsim=5){
         }else{
             exp <- std <- rep(NA, n)
         }
+    }else if(method == "hl"){
+        
+        
+        
     }
     
     
@@ -221,15 +242,49 @@ sim.model.fnc <- function(method,data,parameters,nsim=5){
 
 # Define server logic
 server <- function(input, output) {
-    # Read data
-    df <- read_xls(path = file.name, col_name = T, skip = 3)
-    colnames(df) <- c("Date", "Name", "Rate(%)", "1st Percentile(%)", "25th Percentile(%)",
-                      "75th Percentile(%)", "99th Percentile(%)", "Volume($Billions)")
-    df.nrow <- dim(df)[1]
-    df <- df[c(df.nrow-7:df.nrow),]
-    df.nrow <- dim(df)[1]
+    # Fit model function
+    fit.model.fnc <- function(data){
+        # Reframe the data
+        data <- data/100
+        
+        
+        if(input$option.model == "v"){
+            p.name <- c("speed of reversion (a)", "long-term mean level (b)", "volatility (sigma)")
+            
+            Sx <- sum(data[-length(data)])
+            Sy <- sum(data[-1])
+            Sxx <- sum(data[-length(data)]^2)
+            Syy <- sum(data[-1]^2)
+            Sxy <- sum(data[-1]*data[-length(data)])
+            
+            mu <- (Sy*Sxx-Sx*Sxy)/((length(data)-1)*(Sxx-Sxy)-(Sx^2-Sx*Sy))
+            n <- length(data)-1
+            lambda <- ( ( Sxy - mu*Sx - mu*Sy + n*mu^2) / ( Sxx -2*mu*Sx + n*mu^2) )
+            a <- 1-lambda
+            sigma2 = ( Syy - 2*a*Sxy + a^2*Sxx - 2*mu*(1-a ) * ( Sy - a*Sx ) + n*mu^2*(1-a )^ 2 ) / n
+            sig <- sqrt(sigma2*2*lambda/(1-a^2))
+            
+            
+            p.value <- c(a, mu, sig)
+            
+        }else if(input$option.model == "c"){
+            p.name <- c("")
+            
+        }else if(input$option.model == "hl"){
+            p.name <- c("")
+            
+        }
+        
+        
+        
+        res <- data.frame(value = p.value, name = p.name)
+        return(res)
+    }
     
-    # Plot Graph
+    
+    
+    
+    # Plot Graph (page 1)
     output$chart.plot <- renderPlotly({
         if(input$Plot.button > 0){
             isolate({
@@ -265,7 +320,7 @@ server <- function(input, output) {
                 
                 ggplotly(p, dynamicTicks = TRUE) %>% rangeslider(borderwidth = 1) 
             })
-        }else{
+        }else{ # default option
             df.idx <- seq(1,df.nrow,1)
             df.plot <- data.frame(date = as.Date(df[[1]][df.idx]),
                                   rate = as.numeric(df[[3]][df.idx]))
@@ -284,6 +339,7 @@ server <- function(input, output) {
         }
     })
     
+    # Summary tabel (page 1)
     output$summary.table <- renderTable({
         if(input$Plot.button > 0){
             isolate({
@@ -323,9 +379,9 @@ server <- function(input, output) {
         }
     })
     
-    
+    # Simulation plot (page 2)
     output$simulate.plot <- renderPlotly({
-        if(input$Model.button > 0){
+        if(input$Model_button > 0){
             isolate({
                 # Period
                 df.date <- as.Date(df[[1]])
@@ -337,24 +393,27 @@ server <- function(input, output) {
                     df.to <- tmp
                 }
                 df.idx <- seq(df.to,df.from,as.numeric(input$model.period))
-                # Scaled
-                if(input$option.model == "v"){
-                    df.model <- data.frame(date = as.Date(df[[1]][df.idx]),
-                                           rate = as.numeric(df[[3]][df.idx]))
-                }else if(input$option.model == "c"){
-                    df.model <- data.frame(date = as.Date(df[[1]][df.idx]),
-                                           rate = as.numeric(df[[3]][df.idx]))
-                }
+                df.model <- data.frame(date = as.Date(df[[1]][df.idx]),
+                                       rate = as.numeric(df[[3]][df.idx]))
+                
+                
+                # get the model parameter
+                
+                 # param <- c(0.001,  0.0162, 0.0019)
+                 # param <- data.frame(value = param, name = c("a","b","sig"))
+                param <<- fit.model.fnc(df.model$rate)
+                
+                
+                
+                
                 
                 # fit the model
-                
-                param <- c(0.001,  0.0162, 0.0019)#fit.model.fnc()
-                
-                
-                model.res <- sim.model.fnc(input$option.model,df.model$rate,param)
+                model.res <- sim.model.fnc(input$option.model, df.model$rate, param$value)
                 exp <- model.res$exp
                 std <- model.res$std
                 simulate <- model.res[,1:5]
+                
+                
                 
                 # ggplot
                 p <- ggplot(df.model, aes(date, rate)) + xlab("Date") + ylab("Rate(%)") 
@@ -400,6 +459,20 @@ server <- function(input, output) {
     })
     
     
+    # Parameter table (page 2)
+    output$parameter.table <- renderTable({
+        if(input$Model_button > 0){
+            isolate({
+                param.table <- data.frame(t(param$value))
+                colnames(param.table) <- param$name
+                print(param.table)
+            })
+        }
+    }, width = "200%", align = "c", digits = 4)
+    
+    
+    
+    # Data table (page 3)
     output$data.table <- renderDataTable(datatable({
         df.date <- as.Date(df[[1]])
         df.from <- which(abs(df.date-as.Date(input$dt.from)) == min(abs(df.date - as.Date(input$dt.from)),na.rm=TRUE))
