@@ -83,7 +83,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                                       ) # mainPanel
                                       
                              ),# tabPanle: Plot
-                             tabPanel("Interest Rate Model",
+                             tabPanel("Vasicek Model",
                                       sidebarPanel(
                                           HTML("<h4>Input Parameters</h4>"),
                                           dateInput("model.from",
@@ -102,11 +102,6 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                                                       label = "Periods",
                                                       choices = list("1 day" = 1, "5 days" = 5, "1 month" = 22, "6 months" = 6*22),
                                                       selected = "1 day"
-                                          ),
-                                          selectInput("option.model",
-                                                      label = "Model",
-                                                      choices = list("Vasicek" = "v", "CIR" = "c", "Ho-Lee" = "hl"),
-                                                      selected = "Vasicek"
                                           ),
                                           actionButton("Model_button", 
                                                        "Simulate", 
@@ -178,60 +173,6 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 ) # shinyUI(fluidPage)
 
 
-# Simulation function
-sim.model.fnc <- function(method,data,parameters,nsim=5){
-    n <- length(data)
-    data <- data/100
-    fit <- matrix(NA,nrow=nsim,ncol=n)
-    if(method == "v"){
-        a <- parameters[1]
-        b <- parameters[2]
-        sig <- parameters[3]
-        
-        for (sim in 1:nsim){
-            fit[sim,1] <- data[1]
-            for (i in 2:n){
-                # add <- fit[sim,i-1]*exp(-a)+b*(1-exp(-a))+sig*sqrt((1-exp(-2*a))/(2*a))*rnorm(1)
-                add <- fit[sim,i-1] + a*(b-fit[sim,i-1]) + sig*rnorm(1)
-                fit[sim,i] <- add
-            }
-        }
-        if(a > 1e-5){
-            t <- seq(0,n-1,1)
-            exp <- b+(data[1]-b)*exp(-a*t)
-            std <- sqrt(sig^2/(2*a)*(1-exp(-2*a*t))) 
-        }else{
-            exp <- std <- rep(NA, n)
-        }
-    }else if(method == "c"){
-        a <- parameters[1]
-        b <- parameters[2]
-        sig <- parameters[3]
-        
-        for (sim in 1:nsim){
-            fit[sim,1] <- data[1]
-            for (i in 2:n){
-                add <- fit[sim,i-1]*exp(-a)+b*(1-exp(-a))+sig*sqrt((1-exp(-2*a))/(2*a))*rnorm(1)
-                fit[sim,i] <- add
-            }
-        }
-        if(a > 1e-5){
-            t <- seq(0,n-1,1)
-            exp <-data[1]*exp(-a*t)+b*(1-exp(-a*t))
-            std <- sqrt(data[1]*(sig^2/a)*(exp(-a*t)-exp(-2*a*t))+(b*sig^2/(2*a))*(1-exp(-a*t))^2)
-        }else{
-            exp <- std <- rep(NA, n)
-        }
-    }else if(method == "hl"){
-        
-        
-        
-    }
-    
-    
-    return(data.frame("data" = t(fit*100), "exp"=exp*100, "std"=std*100))
-}
-
 
 
 ######################################################
@@ -245,44 +186,60 @@ server <- function(input, output) {
     # Fit model function
     fit.model.fnc <- function(data){
         # Reframe the data
-        data <- data/100
+        data <- na.omit(data)/100
+        
+        p.name <- c("speed of reversion (a)", "long-term mean level (b)", "volatility (sigma)")
+        
+        n <- length(data)
+        
+        # Least squares regression
+        Sx <- sum(data[-n])
+        Sy <- sum(data[-1])
+        Sxx <- sum(data[-n]^2)
+        Syy <- sum(data[-1]^2)
+        Sxy <- sum(data[-1]*data[-n])
+        
+        mu <- (n*Sxy-Sx*Sy)/(n*Sxx-Sx^2)
+        lambda <- (Sy-mu*Sx)/n
+        sd <- sqrt((n*Syy-Sy^2-mu*(n*Sxy-Sx*Sy))/(n*(n-2)))
         
         
-        if(input$option.model == "v"){
-            p.name <- c("speed of reversion (a)", "long-term mean level (b)", "volatility (sigma)")
-            
-            Sx <- sum(data[-length(data)])
-            Sy <- sum(data[-1])
-            Sxx <- sum(data[-length(data)]^2)
-            Syy <- sum(data[-1]^2)
-            Sxy <- sum(data[-1]*data[-length(data)])
-            
-            mu <- (Sy*Sxx-Sx*Sxy)/((length(data)-1)*(Sxx-Sxy)-(Sx^2-Sx*Sy))
-            n <- length(data)-1
-            lambda <- ( ( Sxy - mu*Sx - mu*Sy + n*mu^2) / ( Sxx -2*mu*Sx + n*mu^2) )
-            a <- 1-lambda
-            sigma2 = ( Syy - 2*a*Sxy + a^2*Sxx - 2*mu*(1-a ) * ( Sy - a*Sx ) + n*mu^2*(1-a )^ 2 ) / n
-            sig <- sqrt(sigma2*2*lambda/(1-a^2))
-            
-            
-            p.value <- c(a, mu, sig)
-            
-        }else if(input$option.model == "c"){
-            p.name <- c("")
-            
-        }else if(input$option.model == "hl"){
-            p.name <- c("")
-            
-        }
+        a <- -log(mu)
+        b <- lambda/(1-mu)
+        sig <- sd*sqrt(-2*log(mu)/(1-mu^2))
         
         
+        p.value <- c(a, b, sig)
         
         res <- data.frame(value = p.value, name = p.name)
         return(res)
     }
     
-    
-    
+    # Simulation function
+    sim.model.fnc <- function(data,parameters,nsim=5){
+        n <- length(data)
+        data <- data/100
+        fit <- matrix(NA,nrow=nsim,ncol=n)
+        a <- parameters[1]
+        b <- parameters[2]
+        sig <- parameters[3]
+        
+        for (sim in 1:nsim){
+            fit[sim,1] <- data[1]
+            for (i in 2:n){
+                add <- fit[sim,i-1]*exp(-a)+b*(1-exp(-a))+sig*sqrt((1-exp(-2*a))/(2*a))*rnorm(1)
+                fit[sim,i] <- add
+            }
+        }
+        if(a != 0){
+            t <- seq(0,n-1,1)
+            exp <- b+(data[1]-b)*exp(-a*t)
+            std <- sqrt(sig^2/(2*a)*(1-exp(-2*a*t))) 
+        }else{
+            exp <- std <- rep(NA, n)
+        }
+        return(data.frame("data" = t(fit*100), "exp"=exp*100, "std"=std*100))
+    }
     
     # Plot Graph (page 1)
     output$chart.plot <- renderPlotly({
@@ -290,8 +247,8 @@ server <- function(input, output) {
             isolate({
                 # Period
                 df.date <- as.Date(df[[1]])
-                df.from <- which(abs(df.date-as.Date(input$input.from)) == min(abs(df.date - as.Date(input$input.from)),na.rm=TRUE))
-                df.to <- which(abs(df.date-as.Date(input$input.to)) == min(abs(df.date - as.Date(input$input.to)),na.rm=TRUE))
+                df.from <- which(abs(df.date-as.Date(input$input.from)) == min(abs(df.date - as.Date(input$input.from)),na.rm=TRUE))[1]
+                df.to <- which(abs(df.date-as.Date(input$input.to)) == min(abs(df.date - as.Date(input$input.to)),na.rm=TRUE))[1]
                 if(df.from < df.to){
                     tmp <- df.from
                     df.from <- df.to
@@ -345,8 +302,8 @@ server <- function(input, output) {
             isolate({
                 # Period
                 df.date <- as.Date(df[[1]])
-                df.from <- which(abs(df.date-as.Date(input$input.from)) == min(abs(df.date - as.Date(input$input.from)),na.rm=TRUE))
-                df.to <- which(abs(df.date-as.Date(input$input.to)) == min(abs(df.date - as.Date(input$input.to)),na.rm=TRUE))
+                df.from <- which(abs(df.date-as.Date(input$input.from)) == min(abs(df.date - as.Date(input$input.from)),na.rm=TRUE))[1]
+                df.to <- which(abs(df.date-as.Date(input$input.to)) == min(abs(df.date - as.Date(input$input.to)),na.rm=TRUE))[1]
                 if(df.from > df.to){
                     tmp <- df.from
                     df.from <- df.to
@@ -385,8 +342,8 @@ server <- function(input, output) {
             isolate({
                 # Period
                 df.date <- as.Date(df[[1]])
-                df.from <- which(abs(df.date-as.Date(input$model.from)) == min(abs(df.date - as.Date(input$model.from)),na.rm=TRUE))
-                df.to <- which(abs(df.date-as.Date(input$model.to)) == min(abs(df.date - as.Date(input$model.to)),na.rm=TRUE))
+                df.from <- which(abs(df.date-as.Date(input$model.from)) == min(abs(df.date - as.Date(input$model.from)),na.rm=TRUE))[1]
+                df.to <- which(abs(df.date-as.Date(input$model.to)) == min(abs(df.date - as.Date(input$model.to)),na.rm=TRUE))[1]
                 if(df.from < df.to){
                     tmp <- df.from
                     df.from <- df.to
@@ -398,21 +355,14 @@ server <- function(input, output) {
                 
                 
                 # get the model parameter
-                
-                 # param <- c(0.001,  0.0162, 0.0019)
-                 # param <- data.frame(value = param, name = c("a","b","sig"))
                 param <<- fit.model.fnc(df.model$rate)
                 
                 
-                
-                
-                
                 # fit the model
-                model.res <- sim.model.fnc(input$option.model, df.model$rate, param$value)
+                model.res <- sim.model.fnc(df.model$rate, param$value)
                 exp <- model.res$exp
                 std <- model.res$std
                 simulate <- model.res[,1:5]
-                
                 
                 
                 # ggplot
@@ -463,7 +413,7 @@ server <- function(input, output) {
     output$parameter.table <- renderTable({
         if(input$Model_button > 0){
             isolate({
-                param.table <- data.frame(t(param$value))
+                param.table <- data.frame(t(param$value * 100))
                 colnames(param.table) <- param$name
                 print(param.table)
             })
@@ -475,14 +425,14 @@ server <- function(input, output) {
     # Data table (page 3)
     output$data.table <- renderDataTable(datatable({
         df.date <- as.Date(df[[1]])
-        df.from <- which(abs(df.date-as.Date(input$dt.from)) == min(abs(df.date - as.Date(input$dt.from)),na.rm=TRUE))
-        df.to <- which(abs(df.date-as.Date(input$dt.to)) == min(abs(df.date - as.Date(input$dt.to)),na.rm=TRUE))
+        df.from <- which(abs(df.date-as.Date(input$dt.from)) == min(abs(df.date - as.Date(input$dt.from)),na.rm=TRUE))[1]
+        df.to <- which(abs(df.date-as.Date(input$dt.to)) == min(abs(df.date - as.Date(input$dt.to)),na.rm=TRUE))[1]
         if(df.from > df.to){
             tmp <- df.from
             df.from <- df.to
             df.to <- tmp
         }
-        df <- subset(df, select = -Name)
+        df <- subset(df, select = -`BENCHMARK NAME`)
         df <- df[c(df.from:df.to),]
         
         if(input$dt.rate.gl == "Greater Than"){
