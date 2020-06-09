@@ -9,24 +9,55 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(httr)
+library(jsonlite)
+
 ```
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+see <https://records.nhl.com/site>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r GET records}
+url_get <- function(url_call){
+  url_base <- "https://records.nhl.com/site/api/"
+  url_full <- paste0(url_base, url_call)
+  
+  table <-
+    url_full %>% 
+    GET() %>%
+    content(type = "text")%>%
+    fromJSON()
+  
+  return(table$data)
+}
 
-```{r cars}
-summary(cars)
+reco_get <- function(ID){
+  season_end <- paste0("franchise-season-records?cayenneExp=franchiseId=", ID)
+  goalie_end <- paste0("franchise-goalie-records?cayenneExp=franchiseId=", ID)
+  skater_end <- paste0("franchise-skater-records?cayenneExp=franchiseId=", ID)
+  
+  return(list(season = url_get(season_end),
+              goalie = url_get(goalie_end),
+              skater = url_get(skater_end))
+         )
+}
+
+url_end <- "franchise"
+fran <- url_get(url_end)
+
+url_end <- "franchise-team-totals"
+fran_total <- url_get(url_end)
+
+fran_1 <- reco_get("1")
+
+fran_1$season
+fran_1$skater
+
+fran_1$goalie
+
+fran %>%
+  select("id", "teamCommonName")
+
+fran_total %>%
+  select("teamId", "teamName")
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
