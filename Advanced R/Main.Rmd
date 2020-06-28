@@ -51,6 +51,7 @@ fran_total <- url_get(url_end)
 fran_1 <- reco_get("1")
 
 fran_1$season
+
 fran_1$skater
 
 fran_1$goalie
@@ -61,3 +62,16 @@ fran %>%
 fran_total %>%
   select("teamId", "teamName")
 ```
+```{r}
+
+fran_total %>% 
+  select(franchiseId, gamesPlayed, wins) %>%
+  group_by(franchiseId) %>%
+  summarise(games = sum(gamesPlayed), wins = sum(wins)) %>%
+  mutate(ratio_win = wins/games) %>%
+  arrange(desc(ratio_win))
+
+
+
+```
+
