@@ -5,8 +5,8 @@ account: jonasliu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2615306
-bundleId: 3439286
+bundleId: 3439323
 url: https://jonasliu.shinyapps.io/HeartFailure/
-when: 1595818094.00866
+when: 1595818681.27432
 asMultiple: FALSE
 asStatic: FALSE
