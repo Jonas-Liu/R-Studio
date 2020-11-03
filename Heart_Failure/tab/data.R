@@ -12,19 +12,18 @@ tabItem_data <-
                                    as.list(colnames(data)),
                                  selected = 
                                    as.list(colnames(data))
-              ),
+              )
               
+            ),
+            
+            mainPanel(
+              dataTableOutput("data_dt"),  # Data table
               br(),
               
               downloadButton("data_download",  # Download button
                              "Download")
               
             ),
-            
-            mainPanel(
-              dataTableOutput("data_dt")  # Data table
-              
-            )
             
             
           ))
