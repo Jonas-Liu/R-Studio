@@ -34,9 +34,6 @@ df.rate <- as.numeric(df[[3]])
 df.vol <- as.numeric(gsub(",", "", df[[8]]))
 df.nrow <- dim(df)[1]
 
-df.plot <- data.frame(date = as.Date(df[[1]][df.idx]),
-                      rate = as.numeric(df[[3]][df.idx]))
-
 ####################################
 #            Shiny Server          #
 ####################################
@@ -86,8 +83,8 @@ shinyServer(function(input, output, session, options = options(warn = -1)) {
         updateTabsetPanel(session, "tab", selected = "info")
         tabItems(
             tabItem_info,
-            # tabItem_eda,
-            # tabItem_model,
+            tabItem_eda,
+            tabItem_model,
             tabItem_data
         )
     })
@@ -95,8 +92,8 @@ shinyServer(function(input, output, session, options = options(warn = -1)) {
 
     # Modules
     source('tab/info.R', local = TRUE)
-    # source('tab/eda.R', local = TRUE)
-    # source('tab/model.R', local = TRUE)
+    source('tab/eda.R', local = TRUE)
+    source('tab/model.R', local = TRUE)
     source('tab/data.R', local = TRUE)
     
 })  

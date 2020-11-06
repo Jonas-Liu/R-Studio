@@ -5,8 +5,8 @@ This application attempted a practical assessment of the current state of SOFR. 
 
 There are three tabs in this application to carry out this quantitative analysis process except for this information page. 
 
-- Exploring Data Analysis: Exploring Analysis on the numeric predictors and the categorical predictors.
-- Modeling: Two ways of supervised learning (tree model and logistic regression).
+- Exploring Data Analysis: Exploring Analysis on the SOFR value.
+- Modeling: Two ways of quantitative analysis (Vasicek model and ARIMA model).
 - Data: Looking up and download data.
 
 

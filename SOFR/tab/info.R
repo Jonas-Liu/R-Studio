@@ -28,6 +28,8 @@ tabItem_info <-
 
 output$info.summary <- renderTable({
   df.idx <- seq(1,df.nrow,1)
+  df.plot <<- data.frame(date = as.Date(df[[1]][df.idx]),
+                        rate = as.numeric(df[[3]][df.idx]))
   res <- as.numeric(summary(df.plot[,2]))
   res <- as.data.frame(cbind(t(res), sd(df.plot[,2], na.rm = T)))
   colnames(res) <- c("Minimum", "1st Quartile", "Median",
@@ -37,7 +39,7 @@ output$info.summary <- renderTable({
 
 output$info.plot <- renderPlot({
   ggplot(df.plot, aes(x = date, y = rate)) +
-    geom_line(size = 1) +
+    geom_line(size = 1, col = "steelblue") +
     theme_light() +
     labs(title = "Time Series Graph", x = "Year", y = "Rate")
 }, width = 800)

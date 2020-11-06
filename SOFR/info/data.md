@@ -10,7 +10,7 @@ For more information on the production of the SOFR, please see [Additional Infor
 
 To access historical data, please see: [Repo Rates Data Historical Search](https://apps.newyorkfed.org/markets/autorates/rates-search-page?rateType=R3)
 
-<img class="special-img-class" style="width:100%" src="https://www.rmahq.org/uploadedImages/Disciplines/Market_Risk/Libor/SOFR%20Figure.jpg" />
+<img class="special-img-class" style="width:60%" src="https://www.rmahq.org/uploadedImages/Disciplines/Market_Risk/Libor/SOFR%20Figure.jpg" />
 
 Sources: [https://apps.newyorkfed.org/markets/autorates/SOFR#Chart12](https://apps.newyorkfed.org/markets/autorates/SOFR)
 
@@ -45,6 +45,6 @@ The paced transition from Libor to SOFR is to allow for the new issuance of SOFR
 Fannie Mae, the World Bank, and Credit Suisse are pioneers of the market's first SOFR-based securities. Fannie Mae issued a \$6 billion SOFR debt transaction, the World Bank raised its first SOFR two-year USD-denominated benchmark bond in the amount of \$1 billion from investors in the Americas and Europe, and Credit Suisse sold a \$100 million, six-month certificate of deposit. These new issuances of SOFR products should foster liquidity in the derivatives hedging market.
 
 
-<img class="special-img-class" style="width:80%" src="https://www.fhlb-pgh.com/Files/Admin/Images/LIBORvsSOFR.jpg" />
+<img class="special-img-class" style="width:60%" src="https://www.fhlb-pgh.com/Files/Admin/Images/LIBORvsSOFR.jpg" />
 
 [Attribute Information](https://apps.newyorkfed.org/markets/autorates/SOFR)
