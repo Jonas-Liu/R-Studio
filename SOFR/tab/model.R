@@ -6,19 +6,19 @@ tabItem_model <-
                      tabPanel("Vasicek Model",
                               sidebarPanel(
                                 HTML("<h4>Input Parameters</h4>"),
-                                dateInput("model.from",
+                                dateInput("model1.from",
                                           label = "From",
                                           min = "2018-04-02",
                                           max = Sys.Date(),
                                           value = "2018-04-02"
                                 ),
-                                dateInput("model.to",
+                                dateInput("model1.to",
                                           label = "To",
                                           min = "2018-04-02",
                                           max = Sys.Date(),
                                           value = Sys.Date()
                                 ),
-                                selectInput("model.period",
+                                selectInput("model1.period",
                                             label = "Periods",
                                             choices = list("1 day" = 1, "5 days" = 5, "1 month" = 22, "6 months" = 6*22),
                                             selected = "1 day"
@@ -53,15 +53,39 @@ tabItem_model <-
                      
                      
                      
-                     tabPanel("ARIMA Model",
+                     tabPanel("GARCH Model",
                               sidebarPanel(
                                 HTML("<h4>Input Parameters</h4>"),
                                 
-                                selectInput("model.period",
-                                            label = "Periods",
-                                            choices = list("1 day" = 1, "5 days" = 5, "1 month" = 22, "6 months" = 6*22),
-                                            selected = "1 day"
+                                dateInput("model2.from",
+                                          label = "From",
+                                          min = "2018-04-02",
+                                          max = Sys.Date(),
+                                          value = "2018-04-02"
                                 ),
+                                dateInput("model2.to",
+                                          label = "To",
+                                          min = "2018-04-02",
+                                          max = Sys.Date(),
+                                          value = Sys.Date()
+                                ),
+                                
+                                numericInput("model2.type",
+                                            label = "AR Term",
+                                            value = 0,
+                                            min = 0,
+                                            max = 24,
+                                            step = 1
+                                            ),
+                                
+                                numericInput("model2.type",
+                                             label = "MA Term",
+                                             value = 0,
+                                             min = 0,
+                                             max = 24,
+                                             step = 1
+                                ),
+                                
                                 actionButton("Model_button_2", 
                                              "Submit", 
                                              class = "btn btn-primary")
@@ -69,7 +93,7 @@ tabItem_model <-
                               
                               mainPanel(
                                 withMathJax(),
-                                div(includeMarkdown("info/arima.md"),
+                                div(includeMarkdown("info/garch.md"),
                                     align = "justify"),
                                 br(),
                                 hr(),
@@ -165,14 +189,14 @@ output$simulate.plot <- renderPlotly({
     isolate({
       # Period
       df.date <- as.Date(df[[1]])
-      df.from <- which(abs(df.date-as.Date(input$model.from)) == min(abs(df.date - as.Date(input$model.from)),na.rm=TRUE))[1]
-      df.to <- which(abs(df.date-as.Date(input$model.to)) == min(abs(df.date - as.Date(input$model.to)),na.rm=TRUE))[1]
+      df.from <- which(abs(df.date-as.Date(input$model1.from)) == min(abs(df.date - as.Date(input$model1.from)),na.rm=TRUE))[1]
+      df.to <- which(abs(df.date-as.Date(input$model1.to)) == min(abs(df.date - as.Date(input$model1.to)),na.rm=TRUE))[1]
       if(df.from < df.to){
         tmp <- df.from
         df.from <- df.to
         df.to <- tmp
       }
-      df.idx <- seq(df.to,df.from,as.numeric(input$model.period))
+      df.idx <- seq(df.to,df.from,as.numeric(input$model1.period))
       df.model <- data.frame(date = as.Date(df[[1]][df.idx]),
                              rate = as.numeric(df[[3]][df.idx]))
       

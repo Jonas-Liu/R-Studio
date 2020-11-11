@@ -1,7 +1,7 @@
 tabItem_info <- 
   tabItem(tabName = "info",
           
-            navbarPage("Info",
+            navbarPage("Information",
               
               tabPanel("Data Description",
                        

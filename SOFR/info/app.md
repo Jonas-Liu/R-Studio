@@ -6,7 +6,7 @@ This application attempted a practical assessment of the current state of SOFR. 
 There are three tabs in this application to carry out this quantitative analysis process except for this information page. 
 
 - Exploring Data Analysis: Exploring Analysis on the SOFR value.
-- Modeling: Two ways of quantitative analysis (Vasicek model and ARIMA model).
+- Modeling: Two ways of quantitative analysis (Vasicek model and GARCH model).
 - Data: Looking up and download data.
 
 
