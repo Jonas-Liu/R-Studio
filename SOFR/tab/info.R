@@ -42,4 +42,4 @@ output$info.plot <- renderPlot({
     geom_line(size = 1, col = "steelblue") +
     theme_light() +
     labs(title = "Time Series Graph", x = "Year", y = "Rate")
-}, width = 800)
+}, width = 665)

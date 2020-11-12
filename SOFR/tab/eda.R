@@ -31,20 +31,22 @@ tabItem_eda <-
                          class = "btn btn-primary")
           ), # sidebarPanel
           mainPanel(
-            column(7,
-                   HTML("<h3>Histogram of SOFR</h4>"),
-                   plotOutput(outputId = "test.plot")
-            ),
-            column(5,
-                   HTML("<h3>Summary Table</h4>"),
-                   tableOutput(outputId = "summary.table"),
-                   br(),
-                   HTML("<h3>Shapiro-Wilk Test</h4>"),
-                   tableOutput(outputId = "test.table")
-            ),
-            hr(),
-            HTML("<h3>Secured Overnight Financing Rate Chart</h4>"),
-            plotlyOutput(outputId = "chart.plot", width = "1000px")
+            
+            HTML("<h4>Secured Overnight Financing Rate Chart</h4>"),
+            plotlyOutput(outputId = "chart.plot", height = "200", width = "800"),
+            
+            column(12,
+                   column(9,
+                          HTML("<h4>Histogram of SOFR</h4>"),
+                          plotOutput(outputId = "test.plot")
+                   ),
+                   column(3,
+                          HTML("<h4>Summary Table</h4>"),
+                          tableOutput(outputId = "summary.table"),
+                          HTML("<h4>Shapiro-Wilk Test</h4>"),
+                          tableOutput(outputId = "test.table")
+                   ),
+            )
             
           ) # mainPanel
   )
@@ -88,7 +90,7 @@ output$chart.plot <- renderPlotly({
       )
       p <- p + geom_point(colour = "#3182bd", size = 0.5)
       
-      ggplotly(p, dynamicTicks = TRUE) %>% rangeslider(borderwidth = 1) 
+      ggplotly(p, dynamicTicks = TRUE) # %>% rangeslider(borderwidth = 1) 
     })
   }else{ # default option
     df.idx <- seq(1,df.nrow,1)
@@ -105,7 +107,7 @@ output$chart.plot <- renderPlotly({
     )
     p <- p + geom_point(colour = "#3182bd", size = 0.5)
     
-    ggplotly(p, dynamicTicks = TRUE) %>% rangeslider(borderwidth = 1) 
+    ggplotly(p, dynamicTicks = TRUE) # %>% rangeslider(borderwidth = 1) 
   }
 })
 
@@ -206,7 +208,7 @@ output$test.plot <- renderPlot({
   }
   
   
-}, width = 600)
+}, height = 365, width = 540)
 
 output$test.table <- renderTable({
   

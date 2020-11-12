@@ -18,7 +18,7 @@ tabItem_data <-
                    
             ),
             
-            column(4,
+            column(3,
                    selectInput("dt.rate.gl",
                                label = "Rate:",
                                choices = c("Greater Than","Less Than"),
@@ -31,7 +31,7 @@ tabItem_data <-
                                value = min(df.rate)
                    ),
             ),
-            column(4,
+            column(3,
                    selectInput("dt.vol.gl",
                                label = "Volume:",
                                choices = c("Greater Than","Less Than"),
@@ -43,18 +43,23 @@ tabItem_data <-
                                max = max(df.vol),
                                value = min(df.vol)
                    ),
+            ),
+            
+            column(2, align = "left",
+                   br(),
+                   br(),
+                   br(),
+                   br(),
+                   br(),
+                   br(),
+                   downloadButton("data_download",  # Download button
+                                  "Download")
             )
           ),
           
           
           # data
-          dataTableOutput("data.table"),
-          
-          br(),
-          column(12, align = "right",
-          downloadButton("data_download",  # Download button
-                         "Download")
-          )
+          dataTableOutput("data.table")
           
           
   )# tabPanle: Data

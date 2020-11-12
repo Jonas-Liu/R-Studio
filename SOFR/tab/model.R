@@ -42,9 +42,9 @@ tabItem_model <-
                                 
                                 conditionalPanel(
                                   condition = "input.Model_button_1 > 0",
-                                  HTML("<h3>Five Simulated Path</h4>"),
-                                  plotlyOutput(outputId = "simulate.plot", width = "1000px"),
-                                  HTML("<h3>Parameter Table</h4>"),
+                                  HTML("<h4>Five Simulated Path</h4>"),
+                                  plotlyOutput(outputId = "simulate.plot", width = "800px"),
+                                  HTML("<h4>Parameter Table</h4>"),
                                   tableOutput(outputId = "parameter.table")
                                 )
                               )
@@ -105,7 +105,7 @@ tabItem_model <-
                                 
                                 conditionalPanel(
                                   condition = "input.Model_button_2 > 0",
-                                  HTML("<h3>To be continued....</h4>"),
+                                  HTML("<h4>To be continued....</h4>"),
                                   
                                 )
                               )
