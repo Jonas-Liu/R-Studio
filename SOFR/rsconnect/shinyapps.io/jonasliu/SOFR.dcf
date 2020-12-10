@@ -5,8 +5,8 @@ account: jonasliu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3210760
-bundleId: 3849987
+bundleId: 3972641
 url: https://jonasliu.shinyapps.io/SOFR/
-when: 1605149277.7373
+when: 1607635967.51829
 asMultiple: FALSE
 asStatic: FALSE

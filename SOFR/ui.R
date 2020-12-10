@@ -13,6 +13,7 @@ library(tree)
 library(readxl)
 library(rsconnect)
 library(MASS)
+library(rugarch)
 
 ######################################################
 #          UI file for the shiny application         #
