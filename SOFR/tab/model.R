@@ -111,7 +111,7 @@ tabItem_model <-
                                          plotOutput(outputId = "estimate.plot")
                                   ),
                                   HTML("Here a GARCH(1,1) is applied to the conditional variance dynamics, and an optimized ARIMA model is applied to the conditional mean dynamics."),
-                                  HTML("<h3>Forecast</h3>"),
+                                  HTML("<h3>SOFR Forecast</h3>"),
                                   plotOutput(outputId = "forecast.plot")
                                 )
                               )
@@ -343,17 +343,17 @@ output$estimate.plot <- renderPlot({
       # Get the forecast variance
       plt.fvar <- data.frame(
         date = c(as.Date(tail(df.model$date, 20)), as.Date(tail(df.model$date, 1)) +  1:input$model2.fore),
-        cvar = c(tail(ft.garch@fit$var, 20), rep(NA, input$model2.fore)),
-        est = c(tail((ft.garch@fit$residuals)^2, 20), rep(NA, input$model2.fore)),
-        fore = c(rep(NA, 20), (fore@forecast$sigmaFor)^2)
+        `Conditional Variance` = c(tail(ft.garch@fit$var, 20), rep(NA, input$model2.fore)),
+        `Squared Residuals` = c(tail((ft.garch@fit$residuals)^2, 20), rep(NA, input$model2.fore)),
+        `Forecast` = c(rep(NA, 20), (fore@forecast$sigmaFor)^2)
       )
       # Plot the forecast variance
       plt.fvar %>%
         gather(name, value, c(2:4)) %>%
-        ggplot(aes(x = date, y = value, color = name)) +
-        geom_line(size = 1) +
-        scale_color_manual(labels = c('Conditional Variance', 'Squared Residuals', 'Forecast'),
-                           values=c('gray','steelblue', '#9ecae1')) +
+        ggplot(aes(x = date, y = value, group = name)) +
+        geom_line(size = 1, aes(color = name, linetype = name)) +
+        scale_linetype_manual(values = c('solid', 'longdash', 'solid')) +
+        scale_color_manual(values = c('gray', '#9ecae1', 'steelblue')) +
         theme(
           panel.background = element_rect(fill = "white", colour = NA),
           axis.line = element_line(colour = "black"),
@@ -377,17 +377,17 @@ output$forecast.plot  <- renderPlot({
       fore.rate <- exp(diffinv(fore@forecast$seriesFor[,1], xi = log(tail(df.rate, 1))))
       plt.frate <- data.frame(
         date = c(as.Date(tail(df.model$date, 20)), as.Date(tail(df.model$date, 1)) +  1:input$model2.fore),
-        act = c(tail(df.model$rate,20), rep(NA,input$model2.fore)),
-        fore = c(rep(NA,19), fore.rate)
+        `Actual` = c(tail(df.model$rate,20), rep(NA,input$model2.fore)),
+        `Forecast` = c(rep(NA,19), fore.rate)
       )
       
       # Plot the forecast rate
       plt.frate %>%
         gather(name, value, c(2:3)) %>%
-        ggplot(aes(x = date, y = value, color = name)) +
+        ggplot(aes(x = date, y = value, color = name, linetype = name)) +
         geom_line(size = 1) +
-        scale_color_manual(labels = c('Actual', 'Forecast'),
-                           values=c('steelblue', '#9ecae1'))+
+        scale_linetype_manual(values = c('solid', 'longdash')) +
+        scale_color_manual(values=c('steelblue', '#9ecae1'))+
         theme(
           panel.background = element_rect(fill = "white", colour = NA),
           axis.line = element_line(colour = "black"),
